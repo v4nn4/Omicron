@@ -1,2 +1,2 @@
 # omicron
-C++ 3d dngine
+C++ 3d engine
