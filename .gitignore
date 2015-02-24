@@ -1,3 +1,8 @@
+# Visual
+*.sdf
+*.suo
+*.opensdf
+
 # Compiled Object files
 *.slo
 *.lo
