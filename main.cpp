@@ -1,5 +1,9 @@
 #include <windows.h>
 #include <cstdint>
+#include <string>
+#include "quaternion.hpp"
+#define M_PI 3.14159265358979323846
+#include <sstream>
 
 struct win32_offscreen_buffer
 {
@@ -189,8 +193,6 @@ int /*nCmdShow*/)
 			nullptr);
 		if (Window)
 		{
-			auto XOffset = 0;
-			auto YOffset = 0;
 			Running = true;
 			while (Running)
 			{
@@ -208,9 +210,24 @@ int /*nCmdShow*/)
 				auto Dimension = GetWindowDimension(Window);
 				Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackBuffer);
 				ReleaseDC(Window, DeviceContext);
-
-				++XOffset;
-				YOffset += 2;
+				static int count = 1;
+				if (count==1)
+				{
+					vector3d v;
+					v.x = 1.0;
+					v.y = 0.0;
+					v.z = 0.0;
+					vector3d u;
+					u.x = 0.0;
+					u.y = 0.0;
+					u.z = 1.0;
+					auto angle = M_PI/4;
+					std::stringstream ss;
+					v = vector3d_utilities::rotate(v, u, angle);
+					ss << v.x << " " << v.y << " " << v.z;
+					OutputDebugStringA(ss.str().c_str());
+					count++;
+				}
 			}
 		}
 		else

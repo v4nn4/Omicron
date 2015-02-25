@@ -29,7 +29,7 @@ double quaternion_utilities::squared_norm(const quaternion& p)
 quaternion quaternion_utilities::versor(const vector3d& u, double angle)
 {
 	quaternion out;
-	angle /= 0.5;
+	angle *= 0.5;
 	out.a = cos(angle);
 	auto sinus = sin(angle);
 	out.b = sinus * u.x;
@@ -41,11 +41,11 @@ quaternion quaternion_utilities::versor(const vector3d& u, double angle)
 quaternion quaternion_utilities::reciprocal(const quaternion& p)
 {
 	quaternion out;
-	auto sn = squared_norm(p);
-	out.a = p.a / sn;
-	out.b = -p.b / sn;
-	out.c = -p.c / sn;
-	out.d = -p.d / sn;
+	auto one_over_sn = 1/squared_norm(p);
+	out.a = p.a * one_over_sn;
+	out.b = -p.b * one_over_sn;
+	out.c = -p.c * one_over_sn;
+	out.d = -p.d * one_over_sn;
 	return out;
 }
 
@@ -76,7 +76,7 @@ vector3d quaternion_utilities::vector_part(const quaternion& p)
 
 vector3d vector3d_utilities::rotate(const vector3d& v, const vector3d& u, double angle)
 {
-	auto q = quaternion_utilities::versor(u, angle);
+	auto q = quaternion_utilities::versor(u, angle); // vector should be precomputed
 	auto p = quaternion_utilities::from_vector3d(v);
 	auto out_quaternion = quaternion_utilities::conjugation(p, q);
 	auto out_vector = quaternion_utilities::vector_part(out_quaternion);

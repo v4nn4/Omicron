@@ -1,3 +1,7 @@
+# Build
+Debug
+Release
+
 # Visual
 *.sdf
 *.suo
