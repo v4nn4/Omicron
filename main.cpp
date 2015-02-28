@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "quaternion.hpp"
 #include "vector3d.hpp"
-#include "polyhedra.hpp"
+#include "polygon.hpp"
 
 struct win32_offscreen_buffer
 {
@@ -35,10 +35,12 @@ GetWindowDimension(HWND Window)
 }
 
 static void
-Render(win32_offscreen_buffer* Buffer, const polyhedra& p)
+Render(win32_offscreen_buffer* Buffer, const polygon& p)
 {
-	auto eps = 0.025;
+	auto eps = 0.02;
 	double x, y;
+	auto nx = 2;
+	auto ny = 2;
 	auto Row = static_cast<uint8_t *>(Buffer->Memory);
 	for (auto Y = 0; Y<Buffer->Height; ++Y)
 	{
@@ -47,9 +49,10 @@ Render(win32_offscreen_buffer* Buffer, const polyhedra& p)
 		{
 			x = static_cast<double>(X) / Buffer->Width;
 			y = static_cast<double>(Y) / Buffer->Height;
-			vector3d v{ 2*x-1, 2*y-1, 0. };
+			vector3d v{ 2*nx*x-nx, 2*ny*y-ny, 0. };
+			// Project vertices in camera space
 			if (polyhedra_utilities::is_close_xy(p.vertices, v, eps))
-				*Pixel++ = 0x000000FF; // 0xAARRGGBB
+				*Pixel++ = 0x000011EE; // 0xAARRGGBB
 			else
 				*Pixel++ = 0x00000000;
 				//Pixel++;
@@ -151,10 +154,6 @@ LPARAM LParam)
 	{
 		PAINTSTRUCT Paint;
 		auto DeviceContext = BeginPaint(Window, &Paint);
-		/*int X = Paint.rcPaint.left;
-		int Y = Paint.rcPaint.top;
-		int Width = Paint.rcPaint.right - Paint.rcPaint.left;
-		int Height = Paint.rcPaint.bottom - Paint.rcPaint.top;*/
 		auto Dimension = GetWindowDimension(Window);
 		Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackBuffer);
 		EndPaint(Window, &Paint);
@@ -200,15 +199,15 @@ int /*nCmdShow*/)
 			nullptr);
 
 		vector3d u;
-		u.x = 1.0;
+		u.x = 0.1;
 		u.y = 1.0;
-		u.z = 1.0;
+		u.z = 0.0;
 		auto norm = sqrt(vector3d_utilities::snorm(u));
 		u.x /= norm;
 		u.y /= norm;
 		u.z /= norm;
-		auto angle = 0.1;
-		auto polyhedra = polyhedra_utilities::generate_discrete_circle(u, 10);
+		auto angle = 0.05;
+		auto polyhedra = polyhedra_utilities::generate_discrete_sphere(u, 6);
 		auto versor = quaternion_utilities::versor(u, angle);
 		if (Window)
 		{
