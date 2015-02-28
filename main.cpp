@@ -1,9 +1,8 @@
 #include <windows.h>
 #include <cstdint>
-#include <string>
 #include "quaternion.hpp"
-#define M_PI 3.14159265358979323846
-#include <sstream>
+#include "vector3d.hpp"
+#include "polyhedra.hpp"
 
 struct win32_offscreen_buffer
 {
@@ -36,17 +35,27 @@ GetWindowDimension(HWND Window)
 }
 
 static void
-Render(win32_offscreen_buffer* Buffer, int /*BlueOffset*/, int /*GreenOffset*/)
+Render(win32_offscreen_buffer* Buffer, const polyhedra& p)
 {
+	auto eps = 0.025;
+	double x, y;
 	auto Row = static_cast<uint8_t *>(Buffer->Memory);
 	for (auto Y = 0; Y<Buffer->Height; ++Y)
 	{
 		auto Pixel = reinterpret_cast<uint32_t*>(Row);
 		for (auto X = 0; X<Buffer->Width; ++X)
 		{
-			//x = static_cast<double>(X) / Buffer->Width;
-			//y = static_cast<double>(Y) / Buffer->Height;
-			*Pixel++ = 0x00000000; // 0xAARRGGBB
+			x = static_cast<double>(X) / Buffer->Width;
+			y = static_cast<double>(Y) / Buffer->Height;
+			vector3d v{ 2*x-1, 2*y-1, 0. };
+			if (polyhedra_utilities::is_close_xy(p.vertices, v, eps))
+				*Pixel++ = 0x000000FF; // 0xAARRGGBB
+			else
+				*Pixel++ = 0x00000000;
+				//Pixel++;
+			//std::stringstream ss;
+			//ss << "pixel : " << x << "\t" << y << std::endl;
+			//OutputDebugStringA(ss.str().c_str());
 		}
 		Row += Buffer->Pitch;
 	}
@@ -79,7 +88,6 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 
 	Buffer->Width = Width;
 	Buffer->Height = Height;
-	Buffer->BytesPerPixel = 4;
 
 	Buffer->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
 	Buffer->Info.bmiHeader.biWidth = Buffer->Width;
@@ -92,7 +100,6 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 	int BitmapMemorySize = (Buffer->Width*Buffer->Height)*Buffer->BytesPerPixel;
 	Buffer->Memory = VirtualAlloc(nullptr, BitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
 	Buffer->Pitch = Buffer->Width*Buffer->BytesPerPixel;
-	Render(Buffer, 0, 0);
 }
 
 static void
@@ -191,6 +198,18 @@ int /*nCmdShow*/)
 			nullptr,
 			hInstance,
 			nullptr);
+
+		vector3d u;
+		u.x = 1.0;
+		u.y = 1.0;
+		u.z = 1.0;
+		auto norm = sqrt(vector3d_utilities::snorm(u));
+		u.x /= norm;
+		u.y /= norm;
+		u.z /= norm;
+		auto angle = 0.1;
+		auto polyhedra = polyhedra_utilities::generate_discrete_circle(u, 10);
+		auto versor = quaternion_utilities::versor(u, angle);
 		if (Window)
 		{
 			Running = true;
@@ -210,24 +229,8 @@ int /*nCmdShow*/)
 				auto Dimension = GetWindowDimension(Window);
 				Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackBuffer);
 				ReleaseDC(Window, DeviceContext);
-				static int count = 1;
-				if (count==1)
-				{
-					vector3d v;
-					v.x = 1.0;
-					v.y = 0.0;
-					v.z = 0.0;
-					vector3d u;
-					u.x = 0.0;
-					u.y = 0.0;
-					u.z = 1.0;
-					auto angle = M_PI/4;
-					std::stringstream ss;
-					v = vector3d_utilities::rotate(v, u, angle);
-					ss << v.x << " " << v.y << " " << v.z;
-					OutputDebugStringA(ss.str().c_str());
-					count++;
-				}
+				vector3d_utilities::rotate(polyhedra.vertices, versor);
+				Render(&GlobalBackBuffer, polyhedra);
 			}
 		}
 		else
