@@ -1,2 +1,3 @@
 # Omicron
-C++ 3d engine
+
+Small CPU 3D renderer written in C++
