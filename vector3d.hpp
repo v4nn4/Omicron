@@ -18,6 +18,7 @@ public:
 	static void rotate(vector3d& v, const quaternion& versor);
 	static void rotate(std::vector<vector3d>& v, const quaternion& versor);
 	static double snorm(const vector3d& u);
+	static void normalize(vector3d& u);
 };
 
 #include "quaternion.hpp"

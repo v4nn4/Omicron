@@ -16,6 +16,7 @@ struct win32_offscreen_buffer
 
 static bool Running;
 static win32_offscreen_buffer GlobalBackBuffer;
+static double aspect_ratio = 2.0;
 
 struct win32_window_dimension
 {
@@ -39,8 +40,6 @@ Render(win32_offscreen_buffer* Buffer, const polygon& p)
 {
 	auto eps = 0.02;
 	double x, y;
-	auto nx = 2;
-	auto ny = 2;
 	auto Row = static_cast<uint8_t *>(Buffer->Memory);
 	for (auto Y = 0; Y<Buffer->Height; ++Y)
 	{
@@ -49,7 +48,7 @@ Render(win32_offscreen_buffer* Buffer, const polygon& p)
 		{
 			x = static_cast<double>(X) / Buffer->Width;
 			y = static_cast<double>(Y) / Buffer->Height;
-			vector3d v{ 2*nx*x-nx, 2*ny*y-ny, 0. };
+			vector3d v{ 2 * aspect_ratio*x - aspect_ratio, 2 * aspect_ratio*y - aspect_ratio, 0. };
 			// Project vertices in camera space
 			if (polyhedra_utilities::is_close_xy(p.vertices, v, eps))
 				*Pixel++ = 0x000011EE; // 0xAARRGGBB
@@ -146,9 +145,27 @@ LPARAM LParam)
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	{
-		/*auto VKCode = WParam;
+		auto VKCode = WParam;
 		auto WasDown = ((LParam & (1 << 30)) != 0);
-		auto IsDown = ((LParam & (1 << 32)) == 0);*/
+		auto IsDown = ((LParam & (1 << 32)) == 0);
+		switch (VKCode)
+		{
+			case VK_UP:
+			{
+				if (IsDown && !WasDown)
+				{
+					aspect_ratio *= 1.1;
+				}
+			} break;
+			case VK_DOWN:
+			{
+				if (IsDown && !WasDown)
+				{
+					aspect_ratio /= 1.1;
+				}
+				//
+			} break;
+		}
 	} break;
 	case WM_PAINT:
 	{
@@ -198,17 +215,12 @@ int /*nCmdShow*/)
 			hInstance,
 			nullptr);
 
-		vector3d u;
-		u.x = 0.1;
-		u.y = 1.0;
-		u.z = 0.0;
-		auto norm = sqrt(vector3d_utilities::snorm(u));
-		u.x /= norm;
-		u.y /= norm;
-		u.z /= norm;
-		auto angle = 0.05;
-		auto polyhedra = polyhedra_utilities::generate_discrete_sphere(u, 6);
+		vector3d u{ 1.0, 1.0, 1.0 };
+		vector3d_utilities::normalize(u);
+		auto angle = 0.075;
+		auto polyhedra = polyhedra_utilities::generate_discrete_sphere(u,10);
 		auto versor = quaternion_utilities::versor(u, angle);
+
 		if (Window)
 		{
 			Running = true;

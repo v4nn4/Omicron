@@ -28,3 +28,11 @@ double vector3d_utilities::snorm(const vector3d& u)
 {
 	return u.x*u.x + u.y*u.y + u.z*u.z;
 }
+
+void vector3d_utilities::normalize(vector3d& u)
+{
+	auto norm = sqrt(vector3d_utilities::snorm(u));
+	u.x /= norm;
+	u.y /= norm;
+	u.z /= norm;
+}
