@@ -1,6 +1,6 @@
 #include "quaternion.hpp"
 #include "vector3d.hpp"
-#include <cmath>
+#include "math.hpp"
 
 double quaternion_utilities::snorm(const quaternion& p)
 {
@@ -11,8 +11,8 @@ quaternion quaternion_utilities::versor(const vector3d& u, const double& angle)
 {
 	quaternion out;
 	auto midangle = angle * 0.5;
-	out.a = cos(midangle);
-	auto sinus = sin(midangle);
+	double sinus;
+	sincos(midangle, &sinus, &out.a);
 	out.b = sinus * u.x;
 	out.c = sinus * u.y;
 	out.d = sinus * u.z;
@@ -39,7 +39,7 @@ quaternion quaternion_utilities::conjugation(const quaternion& p, const quaterni
 quaternion quaternion_utilities::from_vector3d(const vector3d& v)
 {
 	quaternion out;
-	out.a = 0;
+	out.a = 0.;
 	out.b = v.x;
 	out.c = v.y;
 	out.d = v.z;
