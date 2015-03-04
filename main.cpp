@@ -3,6 +3,8 @@
 #include "quaternion.hpp"
 #include "vector3d.hpp"
 #include "polygon.hpp"
+#include "coordinates.hpp"
+#include "math.hpp"
 
 struct win32_offscreen_buffer
 {
@@ -36,47 +38,57 @@ GetWindowDimension(HWND Window)
 }
 
 static void
-Render(win32_offscreen_buffer* Buffer, const polygon& p)
+SetPixel(win32_offscreen_buffer* Buffer, const int& x, const int& y, const uint32_t& color)
 {
-	auto eps = 0.02;
-	double x, y;
-	auto Row = static_cast<uint8_t *>(Buffer->Memory);
-	for (auto Y = 0; Y<Buffer->Height; ++Y)
+	uint32_t& row = reinterpret_cast<uint32_t&>(static_cast<uint8_t*>(Buffer->Memory)[Buffer->Pitch*y+4*x]);
+	row = color;
+}
+
+static void
+Render(win32_offscreen_buffer* Buffer, const polygon& pp, const polygon& fp)
+{
+	screen_coordinates sc{ aspect_ratio, Buffer->Width, Buffer->Height };
+	int x, y;
+	for (auto i = 0; i < pp.vertices.size(); ++i)
 	{
-		auto Pixel = reinterpret_cast<uint32_t*>(Row);
-		for (auto X = 0; X<Buffer->Width; ++X)
-		{
-			x = static_cast<double>(X) / Buffer->Width;
-			y = static_cast<double>(Y) / Buffer->Height;
-			vector3d v{ 2 * aspect_ratio*x - aspect_ratio, 2 * aspect_ratio*y - aspect_ratio, 0. };
-			// Project vertices in camera space
-			if (polyhedra_utilities::is_close_xy(p.vertices, v, eps))
-				*Pixel++ = 0x000011EE; // 0xAARRGGBB
-			else
-				*Pixel++ = 0x00000000;
-				//Pixel++;
-			//std::stringstream ss;
-			//ss << "pixel : " << x << "\t" << y << std::endl;
-			//OutputDebugStringA(ss.str().c_str());
-		}
-		Row += Buffer->Pitch;
+		coordinates_utilities::world_to_screen(pp.vertices[i], sc, x, y);
+		SetPixel(Buffer, x + 1, y, 0);
+		SetPixel(Buffer, x, y, 0);
+		SetPixel(Buffer, x - 1, y, 0);
+		SetPixel(Buffer, x + 1, y + 1, 0);
+		SetPixel(Buffer, x, y + 1, 0);
+		SetPixel(Buffer, x - 1, y + 1, 0);
+		SetPixel(Buffer, x + 1, y - 1, 0);
+		SetPixel(Buffer, x, y - 1, 0);
+		SetPixel(Buffer, x - 1, y - 1, 0);
+	}
+	uint32_t color;
+	for (auto i = 0; i < fp.vertices.size(); ++i)
+	{
+		coordinates_utilities::world_to_screen(fp.vertices[i], sc, x, y);
+		auto n = static_cast<uint32_t>(floor(0.5*(atan(fp.vertices[i].z *fp.vertices[i].z *fp.vertices[i].z * 100)*M_2_OVER_PI + 1) * 255));
+		color = static_cast<uint32_t>(n) << 2 * 4 | 0x000000AA;
+		SetPixel(Buffer, x + 1, y, color);
+		SetPixel(Buffer, x, y, color);
+		SetPixel(Buffer, x - 1, y, color);
+		SetPixel(Buffer, x + 1, y + 1, color);
+		SetPixel(Buffer, x, y + 1, color);
+		SetPixel(Buffer, x - 1, y + 1, color);
+		SetPixel(Buffer, x + 1, y - 1, color);
+		SetPixel(Buffer, x, y - 1, color);
+		SetPixel(Buffer, x - 1, y - 1, color);
 	}
 }
 
 static void
-TranslateBackBuffer(win32_offscreen_buffer* Buffer, int /*XOffset*/, int /*YOffset*/)
+ClearScreen(win32_offscreen_buffer* Buffer)
 {
-	auto Row = static_cast<uint8_t*>(Buffer->Memory);
-	uint32_t tempPixel;
-	for (auto Y = 0; Y<Buffer->Height; ++Y)
+	for (auto y = 0; y < Buffer->Height;++y)
 	{
-		auto Pixel = reinterpret_cast<uint32_t*>(Row);
-		for (auto X = 0; X<Buffer->Width - 1; ++X)
+		for (auto x = 0; x < Buffer->Width;++x)
 		{
-			tempPixel = *Pixel;
-			*(++Pixel) = tempPixel;
+			SetPixel(Buffer, x, y, 0);
 		}
-		Row += Buffer->Pitch;
 	}
 }
 
@@ -155,6 +167,7 @@ LPARAM LParam)
 				if (IsDown && !WasDown)
 				{
 					aspect_ratio *= 1.1;
+					ClearScreen(&GlobalBackBuffer);
 				}
 			} break;
 			case VK_DOWN:
@@ -162,6 +175,7 @@ LPARAM LParam)
 				if (IsDown && !WasDown)
 				{
 					aspect_ratio /= 1.1;
+					ClearScreen(&GlobalBackBuffer);
 				}
 				//
 			} break;
@@ -215,10 +229,10 @@ int /*nCmdShow*/)
 			hInstance,
 			nullptr);
 
-		vector3d u{ 1.0, 1.0, 1.0 };
+		vector3d u{ 0.0, 1.0, 0.0 };
 		vector3d_utilities::normalize(u);
-		auto angle = 0.075;
-		auto polyhedra = polyhedra_utilities::generate_discrete_sphere(u,10);
+		auto angle = 0.001;
+		auto p = polyhedra_utilities::generate_human_head();// polyhedra_utilities::generate_discrete_sphere(u,50);
 		auto versor = quaternion_utilities::versor(u, angle);
 
 		if (Window)
@@ -240,8 +254,9 @@ int /*nCmdShow*/)
 				auto Dimension = GetWindowDimension(Window);
 				Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackBuffer);
 				ReleaseDC(Window, DeviceContext);
-				vector3d_utilities::rotate(polyhedra.vertices, versor);
-				Render(&GlobalBackBuffer, polyhedra);
+				polygon pp{p.vertices};
+				vector3d_utilities::rotate(p.vertices, versor);
+				Render(&GlobalBackBuffer, pp, p);
 			}
 		}
 		else
