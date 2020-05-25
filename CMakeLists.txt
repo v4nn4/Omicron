@@ -13,5 +13,9 @@ add_executable(omicron
         quaternion.cpp
         quaternion.hpp
         vector3d.cpp
-        vector3d.hpp)
+        vector3d.hpp
+        render.cpp
+        render.hpp
+        win32_renderer.cpp
+        macos_renderer.cpp)
 target_link_libraries(omicron stdc++ "-framework Foundation" "-framework Cocoa" objc)
