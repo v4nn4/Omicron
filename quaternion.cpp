@@ -4,7 +4,7 @@
 
 double quaternion_utilities::snorm(const quaternion& p)
 {
-	return p.a*p.a + p.b*p.b + p.c*p.c + p.d*p.d;
+	return p.a * p.a + p.b * p.b + p.c * p.c + p.d * p.d;
 }
 
 quaternion quaternion_utilities::versor(const vector3d& u, const double& angle)
@@ -22,7 +22,7 @@ quaternion quaternion_utilities::versor(const vector3d& u, const double& angle)
 quaternion quaternion_utilities::reciprocal(const quaternion& p)
 {
 	quaternion out;
-	auto one_over_sn = 1/snorm(p);
+	auto one_over_sn = 1 / snorm(p);
 	out.a = p.a * one_over_sn;
 	out.b = -p.b * one_over_sn;
 	out.c = -p.c * one_over_sn;
@@ -33,7 +33,7 @@ quaternion quaternion_utilities::reciprocal(const quaternion& p)
 quaternion quaternion_utilities::conjugation(const quaternion& p, const quaternion& q)
 {
 	auto reciprocal = quaternion_utilities::reciprocal(q);
-	return q*p*reciprocal;
+	return q * p * reciprocal;
 }
 
 quaternion quaternion_utilities::from_vector3d(const vector3d& v)

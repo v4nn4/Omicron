@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __QUATERNION__
+#define __QUATERNION__
 
 struct vector3d;
 
@@ -21,3 +22,5 @@ private:
 	static double snorm(const quaternion& p);
 	static quaternion reciprocal(const quaternion& p);
 };
+
+#endif

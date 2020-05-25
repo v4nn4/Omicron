@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __POLYGON__
+#define __POLYGON__
+
 #include <vector>
 
 struct vector3d;
@@ -18,3 +20,5 @@ public:
 	static polygon generate_human_head();
 	static bool is_close_xy(const std::vector<vector3d>& u, const vector3d& v, const double& eps);
 };
+
+#endif

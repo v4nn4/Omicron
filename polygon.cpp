@@ -1,5 +1,6 @@
 #include "polygon.hpp"
 #include "vector3d.hpp"
+#include <math.h>
 #include "math.hpp"
 
 polygon polyhedra_utilities::generate_discrete_circle(const vector3d& /*u*/, const int& n)

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __COORDINATES__
+#define __COORDINATES__
 
 struct vector3d;
 
@@ -14,3 +15,5 @@ class coordinates_utilities
 public:
 	static void world_to_screen(const vector3d& v, const screen_coordinates& screen_coordinates, int& x, int& y);
 };
+
+#endif

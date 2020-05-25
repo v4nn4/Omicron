@@ -1,4 +1,7 @@
-#pragma once
+#ifndef __VECTOR3D__
+#define __VECTOR3D__
+
+#include <math.h>
 #include <vector>
 
 struct quaternion;
@@ -49,3 +52,5 @@ inline vector3d operator-(const vector3d &u, const vector3d& v)
 	out.z = u.z - v.z;
 	return out;
 }
+
+#endif
