@@ -1,7 +1,6 @@
 #ifndef __VECTOR3D__
 #define __VECTOR3D__
 
-#include <math.h>
 #include <vector>
 
 struct quaternion;

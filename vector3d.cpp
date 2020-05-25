@@ -1,5 +1,6 @@
 #include "vector3d.hpp"
 #include "quaternion.hpp"
+#include <math.h>
 
 void vector3d_utilities::rotate(vector3d& v, const vector3d& u, const double& angle)
 {
